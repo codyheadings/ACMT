@@ -3,7 +3,7 @@ function aggregatedData = aggregateTrackingResults(rootFolder, outputFolder, opt
 % and produce one results file per top-level folder.
 %
 % Every folder level above the tracker level is treated
-% as an experimental category and becomes a "ConditionN" column in the
+% as an grouping category and becomes a "GroupN" column in the
 % output. These can be edited manually after file creation. Cell distance 
 % and speed calculations are run automatically on each collection and 
 % results are grouped into one table per branch.
@@ -22,10 +22,10 @@ function aggregatedData = aggregateTrackingResults(rootFolder, outputFolder, opt
 % Optional: 
 %   options
 %
-%       SaveAggregatedCSVResults: (logical, default: false)
+%       SaveAggregatedTracks: (logical, default: false)
 %           Save a combined results file with all tracking data in one
-%           list to the output folder, uncategorized but sorted by tracker.
-%           Useful for plotting representative tracks.
+%           list to the output folder. Useful for plotting representative 
+%           tracks or running with other metric functions.
 %
 %       XYConversion: (double, default: 1)
 %           Multiplicative factor applied to the X and Y columns.
@@ -54,7 +54,7 @@ function aggregatedData = aggregateTrackingResults(rootFolder, outputFolder, opt
 %   aggregatedData: (cell array of tables)
 %       One table per top-level subfolder, in the same order as the
 %       subfolders appear on disk. Each table has the layout:
-%           Condition1, Condition2, ... ConditionN - folder-derived labels
+%           Group1, Group2, ... GroupN - folder-derived labels
 %           TrackerName - tracker folder name
 %           Cell - 1-based index per tracker
 %           AvgCellSpeed - from cellSpeeds
@@ -68,13 +68,13 @@ function aggregatedData = aggregateTrackingResults(rootFolder, outputFolder, opt
 %           DirectionalPersistence - from cellDistances
 %
 %   The same tables are also saved to outputFolder. 
-%   If options.SaveAggregatedCSVResults is enabled (default: false) an
+%   If options.SaveAggregatedTracks is enabled (default: false) an
 %   additional file will be saved with all cell tracks in one file.
 
     arguments
         rootFolder (1,1) string
         outputFolder (1,1) string
-        options.SaveAggregatedCSVResults (1,1) logical = false
+        options.SaveAggregatedTracks (1,1) logical = false
         options.XYConversion (1,1) double = 1
         options.ZConversion (1,1) double = 1
         options.TConversion (1,1) double = 1
@@ -103,14 +103,14 @@ function aggregatedData = aggregateTrackingResults(rootFolder, outputFolder, opt
  
     if treeDepth < 2
         error('aggregateTrackingResults:shallowTree', ...
-              ['Tree must be at least 2 levels deep (one condition level ' ...
+              ['Tree must be at least 2 levels deep (one Group level ' ...
                'plus a tracker directory). Verify Results files exist ' ...
                'inside tracker subdirectories under rootFolder.']);
     end
  
-    numConditions = treeDepth - 1;
-    conditionColNames = arrayfun(@(n) sprintf('Condition%d', n), ...
-                                  1:numConditions, ...
+    numGroups = treeDepth - 1;
+    GroupColNames = arrayfun(@(n) sprintf('Group%d', n), ...
+                                  1:numGroups, ...
                                   UniformOutput=false);
 
     aggregatedData = struct();
@@ -138,8 +138,8 @@ function aggregatedData = aggregateTrackingResults(rootFolder, outputFolder, opt
             trackerDir = trackerPaths{L};
             [~, trackerName] = fileparts(trackerDir);
             
-            conditionValues = extractConditionLabels( ...
-                                  rootFolder, trackerDir, numConditions);
+            GroupValues = extractGroupLabels( ...
+                                  rootFolder, trackerDir, numGroups);
 
             parentDir = fileparts(trackerDir);
  
@@ -162,8 +162,8 @@ function aggregatedData = aggregateTrackingResults(rootFolder, outputFolder, opt
             compiled = compiled(strcmp(compiled.TrackerName, trackerName), :);
 
             if height(compiled) > 0
-                condPrefix = buildConditionTable(conditionValues, conditionColNames, height(compiled));
-                aggregatedResults = [aggregatedResults; [condPrefix, compiled]]; %#ok<AGROW>
+                gpPrefix = buildGroupTable(GroupValues, GroupColNames, height(compiled));
+                aggregatedResults = [aggregatedResults; [gpPrefix, compiled]]; %#ok<AGROW>
             end
  
             if isempty(compiled) || height(compiled) == 0
@@ -197,16 +197,16 @@ function aggregatedData = aggregateTrackingResults(rootFolder, outputFolder, opt
                          'Type', 'full');
             nRows = height(combined);
  
-            condTable = buildConditionTable(conditionValues, conditionColNames, nRows);
+            gpTable = buildGroupTable(GroupValues, GroupColNames, nRows);
             trackerTable = table(repmat(string(trackerName), nRows, 1), ...
                                  'VariableNames', {'TrackerName'});
  
-            rowTable = [condTable, trackerTable, combined];
+            rowTable = [gpTable, trackerTable, combined];
             topTable = [topTable; rowTable]; %#ok<AGROW>
  
             if options.Logs
                 fprintf('  [ok]  %s / %s (%d cell(s))\n', ...
-                        strjoin(conditionValues, '/'), trackerName, nRows);
+                        strjoin(GroupValues, '/'), trackerName, nRows);
             end
         end
  
@@ -231,11 +231,11 @@ function aggregatedData = aggregateTrackingResults(rootFolder, outputFolder, opt
         aggregatedData.(matlab.lang.makeValidName(topName)) = topTable;
     end
 
-    if options.SaveAggregatedCSVResults
-        resultsOutPath = fullfile(outputFolder, "AggregatedCSVResults.xlsx");
+    if options.SaveAggregatedTracks
+        resultsOutPath = fullfile(outputFolder, "AggregatedTracks.xlsx");
         writetable(aggregatedResults, resultsOutPath);
         if options.Logs
-            fprintf('Saved aggregated CSV results to %s\n', resultsOutPath);
+            fprintf('Saved aggregated tracks to %s\n', resultsOutPath);
         end
     end
  
@@ -275,29 +275,29 @@ function subdirs = getSubdirs(folder)
     subdirs = entries(isSubDir & ~isDot);
 end
 
-function conditionValues = extractConditionLabels(rootFolder, trackerDir, numConditions)
+function GroupValues = extractGroupLabels(rootFolder, trackerDir, numGroups)
     relPath = strrep(trackerDir, rootFolder, '');
  
     % Split on any path separators
     parts = strsplit(relPath, {filesep, '/', '\'});
     parts = parts(~cellfun(@isempty, parts));
  
-    % parts = {Condition1, Condition2, ..., ConditionN, TrackerName}
-    condParts = parts(1:end-1);
+    % parts = {Group1, Group2, ..., GroupN, TrackerName}
+    gpParts = parts(1:end-1);
  
-    if numel(condParts) >= numConditions
-        conditionValues = condParts(1:numConditions);
+    if numel(gpParts) >= numGroups
+        GroupValues = gpParts(1:numGroups);
     else
-        pad = repmat({''}, 1, numConditions - numel(condParts));
-        conditionValues = [condParts, pad];
+        pad = repmat({''}, 1, numGroups - numel(gpParts));
+        GroupValues = [gpParts, pad];
     end
 end
  
  
-function condTable = buildConditionTable(conditionValues, colNames, nRows)
-    condTable = table();
+function gpTable = buildGroupTable(GroupValues, colNames, nRows)
+    gpTable = table();
     for c = 1:numel(colNames)
-        condTable.(colNames{c}) = repmat(string(conditionValues{c}), nRows, 1);
+        gpTable.(colNames{c}) = repmat(string(GroupValues{c}), nRows, 1);
     end
 end
 

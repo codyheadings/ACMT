@@ -18,8 +18,8 @@ function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile
 %       Path to a folder containing swtest.m (Shapiro-Wilk test).
 %
 %   groupColumn: (char | string)
-%       Name of the condition column that defines comparison groups.
-%       Example: 'Condition2'
+%       Name of the group column that defines the selection to be compared.
+%       Example: 'Group2'
 %
 %   outputFile: (char | string)
 %       Full path for the output .xlsx file (including filename).
@@ -31,9 +31,9 @@ function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile
 %       Defaults to all metrics present in the file that match the 
 %       expected column names.
 %
-%   ConditionColumns: (cell array of char, default: auto-detected)
+%   GroupColumns: (cell array of char, default: auto-detected)
 %       Names of columns to use as descriptors in the wide-format metric
-%       sheets (e.g. {'Condition1','Condition2','Condition3','Condition4'}).
+%       sheets (e.g. {'Group1','Group2','Group3','Group4'}).
 %       Auto-detected if not supplied.
 %
 %   Logs: (logical, default: true)
@@ -54,7 +54,7 @@ function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile
 %
 %   <MetricName> (one sheet per metric)
 %       Wide format: descriptor columns | Cell1 | Cell2 | ... | CellN | Average
-%       Descriptor columns are all Condition columns plus TrackerID.
+%       Descriptor columns are all Group columns plus TrackerID.
 %       Each row is one tracker/series combination; each CellN column is
 %       that cell's value for the metric; trailing cells are blank. Useful
 %       for making graphs from the raw data.
@@ -69,7 +69,7 @@ function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile
         groupColumn (1,1) string
         outputFile (1,1) string
         options.Metrics cell = {}
-        options.ConditionColumns cell = {}
+        options.GroupColumns cell = {}
         options.Logs (1,1) logical = true
     end
 
@@ -116,10 +116,10 @@ function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile
 
     allCols = data.Properties.VariableNames;
 
-    if isempty(options.ConditionColumns)
-        condCols = allCols(startsWith(allCols, 'Condition'));
+    if isempty(options.GroupColumns)
+        gpCols = allCols(startsWith(allCols, 'Group'));
     else
-        condCols = options.ConditionColumns;
+        gpCols = options.GroupColumns;
     end
 
     defaultMetrics = { ...
@@ -208,13 +208,13 @@ function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile
     results.NormalityTests = normalityTable;
 
     %%  METRIC SHEETS
-    %   Each row = one tracker identified by its condition
+    %   Each row = one tracker identified by its group
     %   columns. Columns = Cell1, Cell2, ..., CellN, Average.
     if options.Logs, fprintf('Building metric sheets...\n'); end
 
     results.MetricTables = struct();
 
-    descriptionCols = [condCols, {'TrackerID'}];
+    descriptionCols = [gpCols, {'TrackerID'}];
     descriptionCols = descriptionCols(ismember(descriptionCols, allCols));
 
     % Find unique tracker rows
@@ -401,7 +401,7 @@ function [h, p] = runNormalityTest(vals, useSwTest)
 end
 
 function row = padRow(row, numDescriptors, maxCells)
-    nMetricCols = numel(row) - numDescriptors - 1; % -1 for Average
+    nMetricCols = numel(row) - numDescriptors - 1;
     if nMetricCols < maxCells
         pad = repmat({[]}, 1, maxCells - nMetricCols);
         avg = row(end);

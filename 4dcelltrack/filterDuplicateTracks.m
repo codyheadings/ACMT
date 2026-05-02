@@ -104,7 +104,7 @@ function filteredData = filterDuplicateTracks(compiledData, options)
                 nTracks, numel(uniqueGroups));
     end
 
-    % Assign each track to its group based on its first row's condition values
+    % Assign each track to its group based on its first row's group values
     trackGroups = cell(nTracks, 1);
     for k = 1:nTracks
         firstRow = trackRowRanges(k, 1);
@@ -150,7 +150,7 @@ function filteredData = filterDuplicateTracks(compiledData, options)
 
                     if options.OutputPath ~= ""
                         removedSummary{end+1} = buildTrackSummaryRow( ...
-                            tracks{kj}, kj, ki, grpLabel, condCols, compiledData, ...
+                            tracks{kj}, kj, ki, condCols, compiledData, ...
                             trackRowRanges(kj, 1)); %#ok<AGROW>
                     end
                 end
@@ -162,7 +162,7 @@ function filteredData = filterDuplicateTracks(compiledData, options)
                 ki = grpIdx(i);
                 if keepTrack(ki)
                     keptSummary{end+1} = buildTrackSummaryRow( ...
-                        tracks{ki}, ki, NaN, grpLabel, condCols, compiledData, ...
+                        tracks{ki}, ki, NaN, condCols, compiledData, ...
                         trackRowRanges(ki, 1)); %#ok<AGROW>
                 end
             end
