@@ -42,26 +42,27 @@
             <section class="card">
                 <h3>Script Documentation</h3>
                 <hr>
-                <p>Detailed descriptions of each script.</p>
+                <p>Detailed descriptions of each script. Click on one to expand its content.</p>
 
+                <!-- preProcessND2.m -->
                 <div class="doc">
                 <input id="preProcessND2-toggle" class="hidden" type="checkbox">
                 <label for="preProcessND2-toggle" class="dropdown-label"><h4>preProcessND2.m</h4></label>
 
 <div class="dropdown">
 <p><strong>Description:</strong><br>
-preProcessND2 loads data from a .nd2 Nikon Microscope Image file using Bio-Formats,
+<code>preProcessND2</code> loads data from a .nd2 Nikon Microscope Image file using Bio-Formats,
 applies optional spatial binning, performs Gaussian background subtraction,
 and saves the processed file as a BigTIFF.
 </p>
 
 <p><strong>Input:</strong></p>
 <ul>
-    <li><code>inputFile</code> - path to an ND2 file</li>
+    <li><code>inputFile</code> - path to a .nd2 file</li>
     <li><code>outputFolder</code> - directory where output TIFF will be saved</li>
     <li><code>options</code> (optional):
         <ul>
-            <li><code>SeriesIndex</code> - ND2 series to process</li>
+            <li><code>SeriesIndex</code> - .nd2 series to process</li>
             <li><code>ChannelIndex</code> - channel to extract</li>
             <li><code>BinSize</code> - spatial binning factor</li>
             <li><code>GaussianSigma</code> - smoothing kernel for background subtraction</li>
@@ -77,7 +78,7 @@ and saves the processed file as a BigTIFF.
 
 <p><strong>Processing Steps:</strong></p>
 <ul>
-    <li>Load ND2 file via Bio-Formats</li>
+    <li>Load .nd2 file via Bio-Formats</li>
     <li>Select specified series and channel</li>
     <li>Apply spatial binning (optional)</li>
     <li>Apply 3D Gaussian background subtraction</li>
@@ -109,15 +110,16 @@ preProcessND2( ...
 </div>
 </div>
 
+<!-- compileResultsCSV.m -->
                 <div class="doc">
                 <input id="compile-toggle" class="hidden" type="checkbox">
-                <label for="compile-toggle" class="dropdown-label"><h4>compileResultsFromCSV.m</h4></label>
+                <label for="compile-toggle" class="dropdown-label"><h4>compileResultsCSV.m</h4></label>
 
 <div class="dropdown">
 <p><strong>Description:</strong><br>
-compileResultsFromCSV gathers tracking results from multiple subdirectories into a single table.
+compileResultsCSV gathers tracking results from multiple subdirectories into a single table for use in the pipeline.
 Each subdirectory is expected to contain a results file (default: <code>Results.csv</code>) exported from ImageJ or similar tools.
-Optional X, Y, Z, and Time unit conversions can be applied during compilation.
+Optional (but recommended) X, Y, Z, and Time unit conversions can be applied during compilation.
 </p>
 
 <p><strong>Input:</strong></p>
@@ -126,18 +128,24 @@ Optional X, Y, Z, and Time unit conversions can be applied during compilation.
     <li><code>outputFolder</code> (optional) - a directory where compiled results will be saved</li>
     <li><code>options</code> (optional):
         <ul>
-            <li><code>XYConversion</code> - a scaling factor for X and Y</li>
-            <li><code>ZConversion</code> - a scaling factor for Z (slice)</li>
-            <li><code>TConversion</code> - a scaling factor for time</li>
+            <li><code>XYScale</code> - a scaling factor for X and Y. Example: 0.65 would convert 1 ImageJ pixel to 0.65 micrometers.</li>
+            <li><code>ZScale</code> - a scaling factor for Z. Example: 20 would convert 1 ImageJ slice to 20 micrometers.</li>
+            <li><code>TScale</code> - a scaling factor for time. Example: 30 would convert 1 ImageJ frame to 30 minutes.</li>
             <li><code>OutputFilename</code> - the name of output file</li>
-            <li><code>ResultsFilename</code> - the expected filename in each subfolder</li>
+            <li><code>ResultsFilename</code> - the expected filename in each subfolder. Default = "Results.csv"</li>
         </ul>
     </li>
 </ul>
 
 <p><strong>Output:</strong></p>
 <ul>
-    <li><code>compiledData</code> - a table containing all tracking points across all trackers</li>
+    <li><code>compiledData</code> - a table containing all tracking points across all trackers. Columns:</li>
+    <ul>
+        <li><code>Num</code> - the row index within original file</li>
+        <li><code>TrackerName</code> - the source subfolder name</li>
+        <li><code>X, Y, Z</code> - spatial coordinates (converted)</li>
+        <li><code>T</code> - time (converted)</li>
+    </ul>
 </ul>
 
 <p><strong>Expected Folder Structure:</strong></p>
@@ -149,38 +157,32 @@ inputFolder/
 │   └── Results.csv
 </code></pre>
 
-<p><strong>Output Columns:</strong></p>
-<ul>
-    <li><code>Num</code> - the row index within original file</li>
-    <li><code>TrackerName</code> - the source subfolder name</li>
-    <li><code>X, Y, Z</code> - spatial coordinates (converted)</li>
-    <li><code>T</code> - time (converted)</li>
-</ul>
-
 <p><strong>Usage Example:</strong></p>
 <pre class="codeblock"><code>
-compiledData = compileResultsFromCSV( ...
+compiledData = compileResultsCSV( ...
     <span class="string">"data/inputFolder"</span>, ...
     <span class="string">"data/outputFolder"</span>, ...
-    <span class="string">'XYConversion'</span>, 0.65, ... <span class="comment">% or XYConversion = 0.65</span>
-    <span class="string">'ZConversion'</span>, 20, ...
-    <span class="string">'TConversion'</span>, 30 ...
+    <span class="string">'XYScale'</span>, 0.65, ... <span class="comment">% or XYScale = 0.65</span>
+    <span class="string">'ZScale'</span>, 20, ...
+    <span class="string">'TScale'</span>, 30 ...
     ...);
 
-head(compiledData)
+head(compiledData) <span class="comment">% Preview results</span>
 </code></pre>
 <hr>
 </div>
-                </div>
+</div>
+
+<!-- cellDistances.m -->
                 <div class="doc">
                 <input id="dist-toggle" class="hidden" type="checkbox">
                 <label for="dist-toggle" class="dropdown-label"><h4>cellDistances.m</h4></label>
 
 <div class="dropdown">
 <p><strong>Description:</strong><br>
-cellDistances computes displacement-based metrics for each tracked cell, 
-including total distance traveled and net displacement. 
-It operates on compiled tracking data (from <code>compileResultsFromCSV.m</code>) 
+<code>cellDistances</code> computes displacement-based metrics for each tracked cell, 
+including total distance traveled, average frame-to-frame displacement, net displacement,
+and the directional persistence ratio. Operates on compiled tracking data (from <code>compileResultsCSV.m</code>) 
 and uses <code>segmentTracks</code> to separate individual trajectories.
 </p>
 
@@ -200,19 +202,19 @@ and uses <code>segmentTracks</code> to separate individual trajectories.
 
 <p><strong>Output:</strong></p>
 <ul>
-    <li><code>distanceTable</code> - a table with one row per cell track</li>
-</ul>
-
-<p><strong>Metrics Computed:</strong></p>
-<ul>
-    <li>Total path length (cumulative distance)</li>
-    <li>Net displacement (start -> end distance)</li>
-    <li>Optional derived ratios depending on implementation</li>
+    <li><code>distanceTable</code> - a table with one row per cell track. Columns:</li>
+    <ul>
+        <li>Cell - track index</li>
+        <li>AvgFrameDistance - mean displacement between frames</li>
+        <li>CumulativeDistance - total distance traveled across all frames</li>
+        <li>RelativeDisplacement - net displacement between first and last frame</li>
+        <li>DirectionalPersistence - Net displacement / total path length</li>
+    </ul>
 </ul>
 
 <p><strong>Notes:</strong></p>
 <ul>
-    <li>Uses <code>segmentTracks</code> internally</li>
+    <li>Uses <code>segmentTracks</code> to separate trajectories</li>
     <li>Tracks must be time-ordered</li>
     <li>Requires consistent units across X/Y/Z</li>
 </ul>
@@ -228,13 +230,15 @@ head(distanceTable) <span class="comment">% preview results</span>
 <hr>
 </div>
 </div>
+
+<!-- cellSpeeds.m -->
                 <div class="doc">
                 <input id="speed-toggle" class="hidden" type="checkbox">
                 <label for="speed-toggle" class="dropdown-label"><h4>cellSpeeds.m</h4></label>
 
 <div class="dropdown">
 <p><strong>Description:</strong><br>
-cellSpeeds calculates speed-based metrics for each tracked cell using
+<code>cellSpeeds</code> calculates speed-based metrics for each tracked cell using
 compiled tracking data. It computes average speed, cumulative speed,
 and variance across the full trajectory as well as split into first
 and second halves.
@@ -256,24 +260,22 @@ and second halves.
 
 <p><strong>Output:</strong></p>
 <ul>
-    <li><code>speedTable</code> - table with one row per cell track</li>
-</ul>
-
-<p><strong>Output Columns:</strong></p>
-<ul>
-    <li><code>Cell</code> - track index</li>
-    <li><code>AvgCellSpeed</code> - mean speed</li>
-    <li><code>CumulativeCellSpeed</code> - total speed</li>
-    <li><code>varianceEntirePeriod</code> - variance across full track</li>
-    <li><code>varianceFirstHalf</code> - variance (first half)</li>
-    <li><code>varianceLastHalf</code> - variance (second half)</li>
+    <li><code>speedTable</code> - table with one row per cell track. Columns:</li>
+    <ul>
+        <li><code>Cell</code> - track index</li>
+        <li><code>AvgCellSpeed</code> - mean speed</li>
+        <li><code>CumulativeCellSpeed</code> - total speed</li>
+        <li><code>VarianceEntirePeriod</code> - variance across full track</li>
+        <li><code>VarianceFirstHalf</code> - variance (first half)</li>
+        <li><code>VarianceLastHalf</code> - variance (second half)</li>
+    </ul>
 </ul>
 
 <p><strong>Notes:</strong></p>
 <ul>
     <li>Assumes constant frame interval across all tracks</li>
     <li>Uses Euclidean distance between consecutive points</li>
-    <li>Relies on <code>segmentTracks</code> to separate trajectories</li>
+    <li>Uses <code>segmentTracks</code> to separate trajectories</li>
 </ul>
 
 <p><strong>Usage Example:</strong></p>
@@ -291,43 +293,27 @@ mean(speedTable.AvgCellSpeed) <span class="comment">% average across all cells</
 <hr>
 </div>
 </div>
-                <div class="doc">
-                <input id="agg-toggle" class="hidden" type="checkbox">
-                <label for="agg-toggle" class="dropdown-label"><h4>aggregateTrackingResults.m</h4></label>
+                
+<!-- collectTrackingData.m -->
+<div class="doc">
+    <input id="collect-toggle" class="hidden" type="checkbox">
+    <label for="collect-toggle" class="dropdown-label"><h4>collectTrackingData.m</h4></label>
 
-<div class="dropdown">
-<p><strong>Description:</strong><br>
-    <code>aggregateTrackingResults</code> traverses a directory tree of tracking results
-    and compiles them into structured summary tables.
-</p>
+    <div class="dropdown">
+        <p><strong>Description:</strong><br>
+            <code>collectTrackingData</code> traverses a directory tree of raw tracking
+            results and compiles all coordinates into a single grouped table, one row
+            per timepoint.
+        </p>
 
-<p>
-    Each top-level folder inside <code>rootFolder</code> is treated as an independent 
-    dataset. All nested folders above the tracker level are interpreted as 
-    experimental conditions and automatically mapped to columns 
-    (<code>Condition1</code>, <code>Condition2</code>, etc.) in the output.
-</p>
+        <p>
+            Each folder level above the tracker directories is treated as a grouping
+            category and automatically mapped to a column (<code>Group1</code>,
+            <code>Group2</code>, etc.) in the output. Unit scaling is applied during
+            this step by the (optional) given conversion ratios.
+        </p>
 
-<p>
-    For every detected tracker directory (i.e., a folder containing a results file), 
-    this function:
-</p>
-<ul>
-    <li>Loads tracking data using <code>compileResultsFromCSV</code></li>
-    <li>Computes per-cell distance metrics using <code>cellDistances</code></li>
-    <li>Computes per-cell speed metrics using <code>cellSpeeds</code></li>
-    <li>Merges results into a single table per dataset</li>
-</ul>
-
-<p>
-    Optionally, a global file containing all raw compiled tracks can also be saved. 
-    This is useful for downstream visualization (e.g., 
-    <code>plotRepresentativeGraphs</code>).
-</p>
-
-<p>
-    <strong>Example Folder Structure:</strong>
-</p>
+        <p><strong>Example Folder Structure:</strong></p>
 
 <pre class="codeblock">
 <code>rootFolder/
@@ -341,36 +327,100 @@ mean(speedTable.AvgCellSpeed) <span class="comment">% average across all cells</
 </code>
 </pre>
 
+        <p><strong>Inputs:</strong></p>
+        <ul>
+            <li><code>rootFolder</code> - root of the folder tree</li>
+            <li><code>options</code> (optional) -
+                <ul>
+                    <li><code>XYScale</code>, <code>ZScale</code>, <code>TScale</code> - unit scaling factors</li>
+                    <li><code>ResultsFilename</code> - expected tracker file name (default: <code>Results.csv</code>)</li>
+                    <li><code>OutputFile</code> - if provided, saves the compiled table to this path</li>
+                    <li><code>Logs</code> - enable console output</li>
+                </ul>
+            </li>
+        </ul>
+
+        <p><strong>Output:</strong></p>
+        <ul>
+            <li><code>aggregatedTracks</code> - table with one row per timepoint across all trackers. Columns:
+                <ul>
+                    <li>Group Columns (<code>Group1</code>...<code>GroupN</code>)</li>
+                    <li><code>Num</code>, <code>TrackerName</code></li>
+                    <li><code>X</code>, <code>Y</code>, <code>Z</code>, <code>T</code> in scaled units</li>
+                </ul>
+            </li>
+        </ul>
+
+        <p><strong>Usage Example:</strong></p>
+
+<pre class="codeblock">
+<code><span class="comment">% Collect all tracks with unit conversion applied</span>
+tracks = collectTrackingData(<span class="string">'/data/root'</span>, ...
+    XYScale=0.65, ...
+    ZScale=20, ...
+    TScale=30);
+
+<span class="comment">% Save the raw track table to '/output/'</span>
+tracks = collectTrackingData(<span class="string">'/data/root'</span>, ...
+    XYScale=0.65, ZScale=20, TScale=30, ...
+    OutputFile=<span class="string">'/output/AggregatedTracks.xlsx'</span>);
+</code>
+</pre>
+
+        <p><strong>Notes:</strong></p>
+        <ul>
+            <li>The directory tree must be at least two levels deep (one group level plus a tracker directory)</li>
+            <li>Tree depth is inferred from the first <code>Results.csv</code> found. All tracker directories must be at the same depth</li>
+            <li>Group labels are inferred automatically from folder names and can be renamed manually in the output table</li>
+            <li>The output table is the expected input for <code>filterDuplicateTracks</code> and <code>computeTrackingMetrics</code></li>
+        </ul>
+        <hr>
+    </div>
+</div>
+
+<!-- filterDuplicateTracks.m -->
+                <div class="doc">
+                <input id="filter-toggle" class="hidden" type="checkbox">
+                <label for="filter-toggle" class="dropdown-label"><h4>filterDuplicateTracks.m</h4></label>
+
+<div class="dropdown">
+<p>
+    <strong>Description:</strong><br>
+    <code>filterDuplicateTracks</code> identifies and removes duplicate or highly similar 
+    cell tracks from compiled tracking data, in the case that multiple trackers have annotated the same cell.
+</p>
+
+<p>
+    The function compares tracks based on spatial similarity and removes 
+    duplicates according to optional threshold arguments. The cleaned dataset is returned as a table and can 
+    optionally be saved with a summary.
+</p>
+
 <p>
     <strong>Inputs:</strong>
 </p>
 <ul>
-    <li><code>rootFolder</code> - top-level directory containing datasets</li>
-    <li><code>outputFolder</code> - directory to save output files</li>
-    <li><code>options</code> - struct with fields:
-        <ul>
-            <li><code>SaveAggregatedCSVResults</code> - save all raw tracks</li>
-            <li><code>XYConversion</code>, <code>ZConversion</code>, <code>TConversion</code> - unit scaling factors</li>
-            <li><code>OutputFilename</code> - output naming convention</li>
-            <li><code>ResultsFilename</code> - expected tracker file name (default: Results.csv)</li>
-            <li><code>Logs</code> - enable console output</li>
-        </ul>
-    </li>
+    <li><code>aggregatedTracks</code> - a table containing tracking data from (must include X, Y, Z, T) (or a path to a file that contains the table).</li>
+    <li><code>options</code> (optional) </li>
+    <ul>
+        <li><code>XYTolerance</code> - Maximum mean XY distance between two tracks at shared timepoints for them to be considered duplicates.</li>
+        <li><code>ZTolerance</code> - Maximum mean Z distance between two tracks at shared timepoints for them to be considered duplicates.</li>
+        <li><code>OverlapPercent</code> - Minimum fraction of shared timepoints at which both the XY and Z tolerances must be satisfied 
+        for tracks to be flagged as duplicates. Must be in (0, 1].</li>
+        <li><code>OutputPath</code> - If provided, a two-sheet Excel report is written to this path:</li>
+            <ul>
+                <li>KeptTracks - summary of all tracks that were retained</li>
+                <li>RemovedTracks - summary of removed tracks with the index of the track they were considered a duplicate of</li>
+            </ul>
+        <li><code>Logs</code> - enable console output</li>
+    </ul>
 </ul>
 
 <p>
     <strong>Output:</strong>
 </p>
 <ul>
-    <li><code>aggregatedData</code> - struct where each field corresponds to a dataset</li>
-    <li>Each field contains a table with:
-        <ul>
-            <li>Condition columns (Condition1...N)</li>
-            <li>TrackerName</li>
-            <li>Cell-level speed metrics</li>
-            <li>Cell-level distance metrics</li>
-        </ul>
-    </li>
+    <li><code>filteredData</code> - <code>aggregatedTracks</code> with duplicates removed</li>
 </ul>
 
 <p>
@@ -378,55 +428,180 @@ mean(speedTable.AvgCellSpeed) <span class="comment">% average across all cells</
 </p>
 
 <pre class="codeblock">
-<code><span class="comment">% Run full aggregation pipeline</span>
-data = aggregateTrackingResults( ...
-    <span class="string">'/data/root'</span>, ...
-    <span class="string">'/output'</span>);
+<code>
+data = readtable(<span class="string">"compiledResults.xlsx"</span>); 
+<span class="comment">% Load compiled tracking data</span>
 
-<span class="comment">% With unit conversion and raw track export</span>
-data = aggregateTrackingResults( ...
-    <span class="string">'/data/root'</span>, ...
-    <span class="string">'/output'</span>, ...
-    XYConversion=0.65, ...
-    ZConversion=20, ...
-    TConversion=30, ...
-    SaveAggregatedCSVResults=true);
+filtered = filterDuplicateTracks(data); 
+<span class="comment">% Remove duplicate trajectories</span>
 </code>
 </pre>
 
 <p>
-    <strong>Notes:</strong>
+    <strong>Notes:</strong><br>
+    This function is typically used after 
+    <span class="code">compileResultsCSV</span> and before downstream 
+    analysis (e.g., MSD or turning angles).
 </p>
-<ul>
-    <li>The directory tree must be at least two levels deep (conditions + tracker)</li>
-    <li>Tracker folders must contain a file matching <code>ResultsFilename</code></li>
-    <li>Condition labels are inferred automatically from folder names</li>
-    <li>Output tables can be edited post hoc to rename or reorganize conditions</li>
-</ul>
 <hr>
 </div>
 </div>
 
-                <div class="doc">
-                <input id="filter-toggle" class="hidden" type="checkbox">
-                <label for="filter-toggle" class="dropdown-label"><h4>filterDuplicateTracks.m</h4></label>
+<!-- computeTrackingMetrics.m -->
+<div class="doc">
+    <input id="metrics-toggle" class="hidden" type="checkbox">
+    <label for="metrics-toggle" class="dropdown-label"><h4>computeTrackingMetrics.m</h4></label>
 
-<div class="dropdown">
-    WIP
-<hr>
-</div>
+    <div class="dropdown">
+        <p><strong>Description:</strong><br>
+            <code>computeTrackingMetrics</code> takes a compiled coordinate table from
+            <code>collectTrackingData</code> (or <code>filterDuplicateTracks</code>) and computes per-cell distance and speed
+            metrics for every tracker. Results are grouped by the first group column
+            and written to one <code>.xlsx</code> file per group.
+        </p>
+
+        <p>
+            For each detected grouping (e.g., Channel/Dataset/Series), this function:
+        </p>
+        <ul>
+            <li>Computes per-cell distance metrics using <code>cellDistances</code></li>
+            <li>Computes per-cell speed metrics using <code>cellSpeeds</code></li>
+            <li>Merges results into one table per top-level group</li>
+        </ul>
+
+        <p>
+            Group columns are detected positionally: any column preceding
+            <code>Num</code> in the input table is treated as a grouping column,
+            regardless of name. The first group column determines the output file split.
+        </p>
+
+        <p><strong>Inputs:</strong></p>
+        <ul>
+            <li><code>aggregatedTracks</code> - coordinate table from <code>collectTrackingData</code></li>
+            <li><code>outputFolder</code> - directory to save output files</li>
+            <li><code>options</code> (optional) -
+                <ul>
+                    <li><code>OutputFilename</code> - name appended to the Group1 value to form the filename (default: <code>_CombinedResults.xlsx</code>)</li>
+                    <li><code>Logs</code> - enable console output</li>
+                </ul>
+            </li>
+        </ul>
+
+        <p><strong>Output:</strong></p>
+        <ul>
+            <li><code>aggregatedData</code> - struct with one field per top-level group
+                <ul>
+                    <li>Group Columns (<code>Group1</code>...<code>GroupN</code>)</li>
+                    <li><code>TrackerName</code>, <code>Cell</code></li>
+                    <li>Speed metrics: <code>AvgCellSpeed</code>, <code>CumulativeCellSpeed</code>, <code>VarianceEntirePeriod</code>, <code>VarianceFirstHalf</code>, <code>VarianceLastHalf</code></li>
+                    <li>Distance metrics: <code>AvgFrameDistance</code>, <code>CumulativeDistance</code>, <code>RelativeDisplacement</code>, <code>DirectionalPersistence</code></li>
+                </ul>
+            </li>
+        </ul>
+
+        <p><strong>Usage Example:</strong></p>
+
+<pre class="codeblock">
+<code><span class="comment">% Pass tracks directly from collectTrackingData</span>
+tracks  = collectTrackingData(<span class="string">'/data/root'</span>, XYScale=0.65, ZScale=20, TScale=30);
+results = computeTrackingMetrics(tracks, <span class="string">'/output'</span>);
+
+<span class="comment">% With optional duplicate filtering step in between</span>
+tracks  = collectTrackingData(<span class="string">'/data/root'</span>, XYScale=0.65, ZScale=20, TScale=30);
+tracks  = filterDuplicateTracks(tracks);
+results = computeTrackingMetrics(tracks, <span class="string">'/output'</span>);
+
+<span class="comment">% Access one group's results</span>
+c1Table = results.C1;
+</code>
+</pre>
+
+        <p><strong>Notes:</strong></p>
+        <ul>
+            <li>If <code>filterDuplicateTracks</code> is used between collection and metric computation, the filtered table is passed directly here with no other changes needed</li>
+            <li>Output files are named <code>&lt;Group1Value&gt;_CombinedResults.xlsx</code> by default</li>
+        </ul>
+        <hr>
+    </div>
 </div>
 
+<!-- analyzeByGroup.m -->
                 <div class="doc">
                 <input id="analyze-toggle" class="hidden" type="checkbox">
                 <label for="analyze-toggle" class="dropdown-label"><h4>analyzeByGroup.m</h4></label>
 
 <div class="dropdown">
-    WIP
-    <hr>
+<p>
+    <strong>Description:</strong><br>
+    <code>analyzeByGroup</code> performs grouped statistical analysis on aggregated 
+    tracking results. It organizes data by group and computes summary metrics for each group.
+</p>
+
+<p>
+    <strong>Inputs:</strong><br>
+</p>
+<ul>
+    <li><span class="code">aggregatedResults</span> - table field produced by 
+        <span class="code">computeTrackingMetrics</span><br></li>
+    <li><span class="code">swTestPath</span> - path to a folder containing swtest.m (Shapiro-Wilk test).
+        Will throw an error if invalid.<br></li>
+    <li>
+        <span class="code">compareGroup</span> - the name of the column group that will be the comparison group.
+        Example: Using <code>Channel</code>, your data would be compared across channels. 
+        (As long as there is indeed a 'Channel' column in the input table)<br>
+    </li>
+    <li><span class="code">outputFile</span> - full file path for saving results<br></li>
+    <li><span class="code">options</span> (optional) -</li>
+    <ul>
+        <li><span class="code">Metrics</span> - variables to summarize (e.g., AvgCellSpeed, CumulativeDistance).
+        Defaults to all available metrics.</li>
+        <li><span class="code">GroupColumns</span> - Names of columns to use as descriptors in the 
+            wide-format metric sheets (e.g. {'Group1','Group2','Group3','Group4'}). Auto-detected if not supplied.</li>
+        <li><span class="code">Logs</span> - enable console output (default: true)</li>
+    </ul>
+</ul>
+
+<p>
+    <strong>Output:</strong><br>
+</p>
+<ul>
+    <li><code>analysisResults</code> - struct with fields:</li>
+    <ul>
+        <li><code>NormalityTests</code> - table with columns <code>Metric, Group, h_value, p_value</code>. 
+        One row per metric-group combination from the selected category.</li> 
+        <li>
+            MetricTables - struct with one field per metric, 
+            each field being a table of raw data grouped by Group columns with an average for that group at the end.
+            Useful for making graphs from the raw data in other programs.
+        </li>
+        <li>
+            PairwiseTests - struct with one field per unique group pair. Each field contains a comparison table for the 
+            chosen groups with a row for each metric comapred, alongside columns for p and h values, and group means and medians.
+        </li>
+    </ul>
+</ul>
+
+<p>
+    <strong>Usage Example:</strong>
+</p>
+
+<pre class="codeblock">
+<code>
+<span class="comment">% aggregatedTracks is a table with all tracking data</span>
+results = computeTrackingMetrics(aggregatedTracks, <span class="string">'/output'</span>)
+c1Analysis = analyzeByGroup(results.C1, <span class="string">'/swtest'</span>, 
+    ... <span class="string">'Dataset'</span>, <span class="string">'/output/C1AnalysisResults.xlsx'</span>) <span class="comment">% Compare each dataset in Channel 1</span>
+c2Analysis = analyzeByGroup(results.C2, <span class="string">'/swtest'</span>, 
+    ... <span class="string">'Series'</span>, <span class="string">'/output/C1AnalysisResults.xlsx'</span>) <span class="comment">% Compare each series in Channel 2</span>
+
+<span class="comment">% Inspect a specific pairwise sheet</span>
+c1Analysis.PairwiseTests.Dataset11_vs_Dataset12
+</code></pre>
+<hr>
 </div>
 </div>
 
+<!-- computeMSD.m -->
                 <div class="doc">
                 <input id="msd-toggle" class="hidden" type="checkbox">
                 <label for="msd-toggle" class="dropdown-label"><h4>computeMSD.m</h4></label>
@@ -440,32 +615,37 @@ data = aggregateTrackingResults( ...
     computing ensemble MSD statistics.
 </p>
 
+<br>
 <p>
     This function relies on the external 
     <strong>@msdanalyzer</strong> MATLAB toolkit <a target="_blank" href="https://tinevez.github.io/msdanalyzer/">(developed by Jean-Yves Tinevez)</a>.
-   <br><strong>** You must have this package installed and added to your MATLAB path before you can use this function. **</strong>
+    <br><strong>** You must have this package installed and added to your MATLAB path before you can use this function. **</strong>
 </p>
 
 <p>
     The function optionally generates a mean MSD plot with error bars and can 
     save the figure to disk.
-</p>
+</p><br>
 
-<p>Further steps: TODO</p>
+<p>Further steps:</p>
+<p>
+    With this msdanalyzer object, you can fit lines to calculate the diffusion coefficient
+    or use velocity autocorrelation to make informative graphs. 
+    Learn more at <a target="_blank" href="https://tinevez.github.io/msdanalyzer/">@msdanalyzer</a>.
+</p>
 
 <p>
     <strong>Inputs:</strong>
 </p>
 <ul>
-    <li><code>inputData</code> - table or file path containing columns: T, X, Y, Z</li>
+    <li><code>inputData</code> - table or file path containing columns: X, Y, Z, T</li>
     <li><code>outputFolder</code> - (optional) directory to save output figure</li>
-    <li><code>options</code> - struct with fields:
+    <li><code>options</code> (optional) -</li>
         <ul>
             <li><code>OutputFilename</code> - name of saved figure</li>
             <li><code>CreateFigure</code> - toggle plotting</li>
             <li><code>Logs</code> - enable console output</li>
         </ul>
-    </li>
 </ul>
 
 <p>
@@ -500,6 +680,7 @@ mmsd = computeMSD(data, <span class="string">'/output/folder'</span>, ...
 </div>
 </div>
 
+<!-- computeTurningAngles.m -->
                 <div class="doc">
                 <input id="angle-toggle" class="hidden" type="checkbox">
                 <label for="angle-toggle" class="dropdown-label"><h4>computeTurningAngles.m</h4></label>
@@ -508,13 +689,15 @@ mmsd = computeMSD(data, <span class="string">'/output/folder'</span>, ...
 <p>
     <strong>Description:</strong><br>
     <code>computeTurningAngles</code> calculates turning angles between 
-    consecutive displacement vectors for each tracked cell in 3D space.
+    consecutive displacement vectors for each tracked cell in 3D space. 
+    While not directly used in our cell tracking pipeline, 
+    the function may provide some use for auxillary tracking metrics.
 </p>
 
 <p>
     The function first segments trajectories using <code>segmentTracks</code>, 
-    then computes angles between successive motion vectors using the dot product. 
-    Angles are reported in degrees.
+    then computes the change in trajectory angle between successive motion vectors
+    using the dot product. Angles are reported in degrees.
 </p>
 
 <p>
@@ -528,12 +711,11 @@ mmsd = computeMSD(data, <span class="string">'/output/folder'</span>, ...
 <ul>
     <li><code>inputData</code> - table or file path containing T, X, Y, Z</li>
     <li><code>outputFolder</code> - (optional) directory to save results</li>
-    <li><code>options</code> - struct with fields:
+    <li><code>options</code> (optional) -</li>
         <ul>
             <li><code>OutputFilename</code> - output CSV file name</li>
             <li><code>Logs</code> - enable console output</li>
         </ul>
-    </li>
 </ul>
 
 <p>
@@ -566,6 +748,7 @@ angles = computeTurningAngles(data, <span class="string">'/output'</span>, ...
 </div>
 </div>
 
+<!-- plotRepresentativeGraphs.m -->
                 <div class="doc">
                 <input id="plot-toggle" class="hidden" type="checkbox">
                 <label for="plot-toggle" class="dropdown-label"><h4>plotRepresentativeGraphs.m</h4></label>
@@ -631,6 +814,7 @@ is selected for plotting. Two figures are generated:
 </div>
 </div>
 
+<!-- segmentTracks.m -->
                 <div class="doc">
                 <input id="segment-toggle" class="hidden" type="checkbox">
                 <label for="segment-toggle" class="dropdown-label"><h4>segmentTracks.m</h4></label>
@@ -679,7 +863,7 @@ plot3(track1.X, track1.Y, track1.Z);</code></pre>
     </div>
 
     <footer>
-        <p>Last Updated: April 29, 2026</p>
+        <p>Last Updated: May 2nd, 2026</p>
     </footer>
 </body>
 
