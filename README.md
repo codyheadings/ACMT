@@ -1,2 +1,2 @@
-# 4dcelltrack
-Open-source pipeline for 4D cell tracking and migration analysis in iPSC-derived forebrain assembloid live imaging.
+# Tracking Data and Coordinates
+Example data provided by the Zeldich lab gathered from 24 forebrain assembloids using the OrthoTrack manual tracking pipeline. This data can be used as an example for tracking results formatting, as well as inputs to any of the pipeline functions. There are two parts to this data: 1) an example folder containing channel, dataset, and series subfolders, each with tracking data from 3+ trackers in each path. Additionally, 2) an AggregatedTracks.xslx file is given, with all the data from the Results.csv files converted and grouped into one file.
