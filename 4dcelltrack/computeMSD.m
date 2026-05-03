@@ -1,6 +1,7 @@
 function mmsd = computeMSD(inputData, outputFolder, options)
 % COMPUTEMSD Compute MSD from tracking data (table or file path)
 %
+% To learn more about MSD, visit https://tinevez.github.io/msdanalyzer/
 %
 % INPUT:
 %

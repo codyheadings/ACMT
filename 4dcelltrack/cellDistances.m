@@ -3,15 +3,15 @@ function distanceTable = cellDistances(compiledData, outputFolder, options)
 % compiled tracking data produced by compileResultsFromCSV.
 %
 % For each cell track, computes cumulative path length, average
-% frame-to-frame displacement, and net displacement from start to end.
-% Results are returned as a table and optionally saved to a file.
+% frame-to-frame displacement, net displacement, and the directional 
+% persistence ratio. Results are returned as a table and optionally saved.
 %
 % INPUT:
 % 
 % Required:
 %   compiledData: (table)
-%       Tracking table produced by compileResultsFromCSV. Must contain
-%       columns: X, Y, Z, T.
+%       Tracking table produced by compileResultsCSV. Must contain
+%       columns X, Y, Z, T.
 %
 % Optional:
 %   outputFolder: (char | string, default: "" (no file is written))
@@ -32,10 +32,8 @@ function distanceTable = cellDistances(compiledData, outputFolder, options)
 %           Cell - 1-based cell index
 %           AvgFrameDistance - mean step-to-step displacement
 %           CumulativeDistance - total path length across all frames
-%           RelativeDisplacement - straight-line distance from first
-%                                  to last recorded position
-%           DirectionalPersistence - RelativeDisplacement / CumulativeDistance
-%                                    (0 = random walk, 1 = straight path)
+%           RelativeDisplacement - distance from first to last position
+%           DirectionalPersistence - efficiency of motion toward end point
 
     arguments
         compiledData (:,:) table

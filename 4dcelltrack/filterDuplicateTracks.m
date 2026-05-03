@@ -1,10 +1,10 @@
-function filteredData = filterDuplicateTracks(compiledData, options)
+function filteredTracks = filterDuplicateTracks(aggregatedTracks, options)
 % FILTERDUPLICATETRACKS Detect and remove duplicate cell tracks from a
 % compiled tracking table produced by compileResultsFromCSV.
 %
 % Two tracks are considered duplicates if, over their shared timepoints,
 % their XY distance stays within XYTolerance AND their Z distance stays
-% within ZTolerance for at least MinOverlapFrac of those timepoints.
+% within ZTolerance for at least OverlapPercent of those timepoints.
 % When a duplicate pair is found, the first track (by row order) is kept
 % and the second is removed.
 %
@@ -13,71 +13,81 @@ function filteredData = filterDuplicateTracks(compiledData, options)
 % INPUTS:
 %
 % Required:
-%   compiledData (table)
-%       Tracking table from aggregateTrackingResults. Must contain columns:
+%   aggregatedTracks (table | string | char)
+%       Tracking table from aggregateTrackingResults, provided as file path
+%       or table. Must contain columns:
 %           GroupingCols, Num, TrackerName, X, Y, Z, T. Grouping columns 
 %           must precede Num column to be correctly detected.
 %
 % Optional:
-%   XYTolerance (double, default: 5)
-%       Maximum mean XY distance between two tracks at shared
-%       timepoints for them to be considered duplicates.
+%   options
 %
-%   ZTolerance (double, default: 40)
-%       Maximum mean Z distance between two tracks at shared
-%       timepoints for them to be considered duplicates.
+%       XYTolerance (double, default: 5)
+%           Max XY distance between two tracks at shared
+%           timepoints for them to be considered duplicates.
 %
-%   MinOverlapFrac (double, default: 0.75)
-%       Minimum fraction of shared timepoints at which both the XY and Z
-%       tolerances must be satisfied for tracks to be flagged as duplicates.
-%       Must be in (0, 1].
+%       ZTolerance (double, default: 40)
+%           Max Z distance between two tracks at shared
+%           timepoints for them to be considered duplicates.
 %
-%   OutputPath (char | string, default: "" (no file written))
-%       If provided, a two-sheet Excel report is written to this path:
-%           KeptTracks - summary of all tracks that were retained
-%           RemovedTracks - summary of removed tracks with the index of
-%                           the track they were considered a duplicate of
+%       OverlapPercent (double, default: 0.75)
+%           Min fraction of shared timepoints at which XY and Z tolerances
+%           must be satisfied for tracks to be flagged as duplicates.
+%           Must be in (0, 1].
 %
-%   Logs (logical, default: true)
-%       Print progress messages to the command window.
+%       OutputPath (char | string, default: "" (no file written))
+%           If provided, a two-sheet Excel report is written to this path:
+%               KeptTracks - summary of all tracks that were retained
+%               RemovedTracks - summary of removed tracks
+%
+%       Logs (logical, default: true)
+%           Print progress messages to the command window.
 %
 % OUTPUT:
 %
 %   filteredData (table)
-%       Subset of compiledData with duplicate track rows removed. The
+%       Subset of aggregatedTracks with duplicate track rows removed. The
 %       table structure is identical to the input so it can be passed
 %       directly to analyzeByGroup or other functions.
 
     arguments
-        compiledData (:,:) table
+        aggregatedTracks {mustBeA(aggregatedTracks,["table","string","char"])}
         options.XYTolerance (1,1) double = 5
         options.ZTolerance (1,1) double = 40
-        options.MinOverlapFrac (1,1) double = 0.75
+        options.OverlapPercent (1,1) double = 0.75
         options.OutputPath (1,1) string = ""
         options.Logs (1,1) logical = true
     end
 
+    if isstring(aggregatedTracks) || ischar(aggregatedTracks)
+        if ~isfile(aggregatedTracks)
+            error('filterDuplicateTracks:fileNotFound', ...
+                'File not found:\n%s', aggregatedTracks);
+        end
+        aggregatedTracks = readtable(aggregatedTracks);
+    end
+
     requiredCols = {'X', 'Y', 'Z', 'T'};
-    missingCols = requiredCols(~ismember(requiredCols, compiledData.Properties.VariableNames));
+    missingCols = requiredCols(~ismember(requiredCols, aggregatedTracks.Properties.VariableNames));
     if ~isempty(missingCols)
         error('filterDuplicateTracks:missingColumns', ...
-              'compiledData is missing required column(s): %s', ...
+              'aggregatedTracks is missing required column(s): %s', ...
               strjoin(missingCols, ', '));
     end
 
-    if options.MinOverlapFrac <= 0 || options.MinOverlapFrac > 1
+    if options.OverlapPercent <= 0 || options.OverlapPercent > 1
         error('filterDuplicateTracks:invalidOverlap', ...
-              'MinOverlapFrac must be in (0, 1]. Got: %g', options.MinOverlapFrac);
+              'OverlapPercent must be in (0, 1]. Got: %g', options.OverlapPercent);
     end
 
-    allCols = compiledData.Properties.VariableNames;
+    allCols = aggregatedTracks.Properties.VariableNames;
 
     % Find the 'Num' column
     numIdx = find(strcmp(allCols, 'Num'), 1);
     
     if isempty(numIdx)
         error('filterDuplicateTracks:missingNumColumn', ...
-              'compiledData must contain a ''Num'' column.');
+              'aggregatedTracks must contain a ''Num'' column.');
     end
     
     % Everything before 'Num' is treated as a group column
@@ -89,14 +99,14 @@ function filteredData = filterDuplicateTracks(compiledData, options)
         end
         groupKeys = {''};
     else
-        groupKeys = buildGroupKeys(compiledData, condCols);
+        groupKeys = buildGroupKeys(aggregatedTracks, condCols);
     end
 
     uniqueGroups = unique(groupKeys, 'stable');
 
     % segmentTracks returns a cell array of track tables; we also need to
     % know the original row indices so we can mark rows for removal.
-    [tracks, trackRowRanges] = segmentTracksWithIndex(compiledData);
+    [tracks, trackRowRanges] = segmentTracksWithIndex(aggregatedTracks);
     nTracks = numel(tracks);
 
     if options.Logs
@@ -139,7 +149,7 @@ function filteredData = filterDuplicateTracks(compiledData, options)
                     tracks{ki}, tracks{kj}, ...
                     options.XYTolerance, options.ZTolerance);
 
-                if overlapFrac >= options.MinOverlapFrac
+                if overlapFrac >= options.OverlapPercent
                     % Keep ki, remove kj
                     keepTrack(kj) = false;
 
@@ -150,7 +160,7 @@ function filteredData = filterDuplicateTracks(compiledData, options)
 
                     if options.OutputPath ~= ""
                         removedSummary{end+1} = buildTrackSummaryRow( ...
-                            tracks{kj}, kj, ki, condCols, compiledData, ...
+                            tracks{kj}, kj, ki, condCols, aggregatedTracks, ...
                             trackRowRanges(kj, 1)); %#ok<AGROW>
                     end
                 end
@@ -162,21 +172,21 @@ function filteredData = filterDuplicateTracks(compiledData, options)
                 ki = grpIdx(i);
                 if keepTrack(ki)
                     keptSummary{end+1} = buildTrackSummaryRow( ...
-                        tracks{ki}, ki, NaN, condCols, compiledData, ...
+                        tracks{ki}, ki, NaN, condCols, aggregatedTracks, ...
                         trackRowRanges(ki, 1)); %#ok<AGROW>
                 end
             end
         end
     end
 
-    keepRow = false(height(compiledData), 1);
+    keepRow = false(height(aggregatedTracks), 1);
     for k = 1:nTracks
         if keepTrack(k)
             keepRow(trackRowRanges(k,1):trackRowRanges(k,2)) = true;
         end
     end
 
-    filteredData = compiledData(keepRow, :);
+    filteredTracks = aggregatedTracks(keepRow, :);
 
     nRemoved = sum(~keepTrack);
     nKept = sum(keepTrack);

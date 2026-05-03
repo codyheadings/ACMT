@@ -1,5 +1,5 @@
 function angleTable = computeTurningAngles(inputData, outputFolder, options)
-% COMPUTETURNINGANGLES Compute turning angles from tracking data.
+% COMPUTETURNINGANGLES Compute cell turning angles from tracking data.
 %
 % INPUT:
 %

@@ -1,4 +1,4 @@
-function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile, options)
+function analysisResults = analyzeByGroup(aggregatedResults, swTestPath, compareGroup, outputFile, options)
 % ANALYZEBYGROUP Full Statistical analysis using file created from 
 % aggregateTrackingResults with normality testing.
 % 
@@ -9,17 +9,16 @@ function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile
 % INPUT:
 % 
 % Required:
-%   inputData: (table | string | char)
-%       If string: Path to the .xlsx produced by aggregateTrackingResults.
-%       If table: aggregatedData / filteredData table produced by the
-%       respective functions.
+%   aggregatedResults: (table | string | char)
+%       If string: Path to the .xlsx produced by computeTrackingMetrics.
+%       If table: aggregatedResults table output from
+%       computeTrackingMetrics.
 %
 %   swTestPath: (char | string)
 %       Path to a folder containing swtest.m (Shapiro-Wilk test).
 %
-%   groupColumn: (char | string)
+%   compareGroup: (char | string)
 %       Name of the group column that defines the selection to be compared.
-%       Example: 'Group2'
 %
 %   outputFile: (char | string)
 %       Full path for the output .xlsx file (including filename).
@@ -32,7 +31,7 @@ function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile
 %       expected column names.
 %
 %   GroupColumns: (cell array of char, default: auto-detected)
-%       Names of columns to use as descriptors in the wide-format metric
+%       Names of columns to use as descriptors in the metric
 %       sheets (e.g. {'Group1','Group2','Group3','Group4'}).
 %       Auto-detected if not supplied.
 %
@@ -42,7 +41,7 @@ function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile
 % OUTPUT:
 %
 %   results: (struct)
-%       .NormalityTests - table matching the Normality Tests sheet
+%       .NormalityTests - table matching the Normality Tests sheet below
 %       .MetricTables - struct with one field per metric (wide-format table)
 %       .PairwiseTests - struct with one field per group pair (comparison table)
 %
@@ -50,38 +49,34 @@ function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile
 %
 %   Normality Tests
 %       Metric | Group | h_value | p_value
-%       One row per metric-group combination. h=TRUE means non-normal.
+%       One row per metric-group combination.
 %
 %   <MetricName> (one sheet per metric)
 %       Wide format: descriptor columns | Cell1 | Cell2 | ... | CellN | Average
-%       Descriptor columns are all Group columns plus TrackerID.
-%       Each row is one tracker/series combination; each CellN column is
-%       that cell's value for the metric; trailing cells are blank. Useful
-%       for making graphs from the raw data.
 %
 %   <GroupA> vs <GroupB> (one sheet per unique pair of groups)
 %       Metric | p_value | h_value | <GroupA>_Mean | <GroupB>_Mean |
 %       <GroupA>_Median | <GroupB>_Median
 
     arguments
-        inputData {mustBeA(inputData,["table","string","char"])}
+        aggregatedResults {mustBeA(aggregatedResults,["table","string","char"])}
         swTestPath (1,1) string
-        groupColumn (1,1) string
+        compareGroup (1,1) string
         outputFile (1,1) string
         options.Metrics cell = {}
         options.GroupColumns cell = {}
         options.Logs (1,1) logical = true
     end
 
-   if istable(inputData)
-        data = inputData;
+   if istable(aggregatedResults)
+        data = aggregatedResults;
 
-    elseif isstring(inputData) || ischar(inputData)
-        if ~isfile(inputData)
+    elseif isstring(aggregatedResults) || ischar(aggregatedResults)
+        if ~isfile(aggregatedResults)
             error('analyzeByGroup:fileNotFound', ...
-                'File not found:\n%s', inputData);
+                'File not found:\n%s', aggregatedResults);
         end
-        data = readtable(inputData, VariableNamingRule='preserve');
+        data = readtable(aggregatedResults, VariableNamingRule='preserve');
 
     else
         error('analyzeByGroup:invalidInput', ...
@@ -108,10 +103,10 @@ function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile
         fprintf('Loading inputData\n');
     end
 
-    if ~ismember(groupColumn, data.Properties.VariableNames)
+    if ~ismember(compareGroup, data.Properties.VariableNames)
         error('analyzeByGroup:invalidGroupColumn', ...
               'Column "%s" not found. Available: %s', ...
-              groupColumn, strjoin(data.Properties.VariableNames, ', '));
+              compareGroup, strjoin(data.Properties.VariableNames, ', '));
     end
 
     allCols = data.Properties.VariableNames;
@@ -125,9 +120,9 @@ function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile
     defaultMetrics = { ...
         'AvgCellSpeed', ...
         'CumulativeCellSpeed', ...
-        'varianceEntirePeriod', ...
-        'varianceFirstHalf', ...
-        'varianceLastHalf', ...
+        'VarianceEntirePeriod', ...
+        'VarianceFirstHalf', ...
+        'VarianceLastHalf', ...
         'AvgFrameDistance', ...
         'CumulativeDistance', ...
         'RelativeDisplacement', ...
@@ -150,11 +145,11 @@ function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile
               'None of the expected metric columns were found in the input file.');
     end
 
-    groupLabels = unique(data.(groupColumn), 'stable');
+    groupLabels = unique(data.(compareGroup), 'stable');
     numGroups = numel(groupLabels);
 
     if options.Logs
-        fprintf('Groups (%s): %s\n', groupColumn, strjoin(string(groupLabels), ', '));
+        fprintf('Groups (%s): %s\n', compareGroup, strjoin(string(groupLabels), ', '));
         fprintf('Metrics: %s\n', strjoin(metrics, ', '));
     end
 
@@ -176,7 +171,7 @@ function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile
     for g = 1:numGroups
         label = groupLabels{g};
         safeLabel = matlab.lang.makeValidName(label);
-        bools = strcmp(data.(groupColumn), label);
+        bools = strcmp(data.(compareGroup), label);
         groupData.(safeLabel).rows = data(bools, :);
         groupData.(safeLabel).label = label;
     end
@@ -205,14 +200,14 @@ function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile
         normMetric', normGroup', normH', normP', ...
         'VariableNames', {'Metric', 'Group', 'h_value', 'p_value'});
 
-    results.NormalityTests = normalityTable;
+    analysisResults.NormalityTests = normalityTable;
 
     %%  METRIC SHEETS
     %   Each row = one tracker identified by its group
     %   columns. Columns = Cell1, Cell2, ..., CellN, Average.
     if options.Logs, fprintf('Building metric sheets...\n'); end
 
-    results.MetricTables = struct();
+    analysisResults.MetricTables = struct();
 
     descriptionCols = [gpCols, {'TrackerID'}];
     descriptionCols = descriptionCols(ismember(descriptionCols, allCols));
@@ -282,13 +277,13 @@ function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile
         end
 
         safeMetric = matlab.lang.makeValidName(metric);
-        results.MetricTables.(safeMetric) = fileTable;
+        analysisResults.MetricTables.(safeMetric) = fileTable;
     end
 
     %% PAIRWISE GROUP COMPARISON SHEETS
     if options.Logs, fprintf('Running pairwise group comparisons...\n'); end
 
-    results.PairwiseTests = struct();
+    analysisResults.PairwiseTests = struct();
     groupPairs = {};
 
     for g1 = 1:numGroups
@@ -348,7 +343,7 @@ function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile
                                   medianCol1, medianCol2});
 
             pairKey = sprintf('%s_vs_%s', safe1, safe2);
-            results.PairwiseTests.(pairKey) = pairTable;
+            analysisResults.PairwiseTests.(pairKey) = pairTable;
             groupPairs{end+1} = struct( ...
                 'label1', label1, 'label2', label2, ...
                 'key', pairKey, 'table', pairTable); %#ok<AGROW>
@@ -365,7 +360,7 @@ function results = analyzeByGroup(inputData, swTestPath, groupColumn, outputFile
     for m = 1:numel(metrics)
         safeMetric = matlab.lang.makeValidName(metrics{m});
         sheetName = metrics{m};
-        writetable(results.MetricTables.(safeMetric), outputFile, 'Sheet', sheetName);
+        writetable(analysisResults.MetricTables.(safeMetric), outputFile, 'Sheet', sheetName);
     end
 
     % One sheet per group pair

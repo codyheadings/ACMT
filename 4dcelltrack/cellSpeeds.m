@@ -1,6 +1,6 @@
 function speedTable = cellSpeeds(compiledData, outputFolder, options)
 % CELLSPEEDS Calculate speed metrics for each tracked cell from
-% compiled tracking data produced by compileResultsFromCSV.
+% compiled tracking data produced by compileResultsCSV.
 %
 % For each cell track, computes average speed, cumulative speed, and 
 % speed variance over the full period, as well as the first and 
@@ -12,7 +12,7 @@ function speedTable = cellSpeeds(compiledData, outputFolder, options)
 % Required:
 %   compiledData: (table)
 %       Tracking table produced by compileResultsFromCSV. Must contain
-%       columns: X, Y, Z, T. All tracks must share the same time step.
+%       columns X, Y, Z, T. All tracks must share the same time step.
 %
 % Optional:
 %   outputFolder: (char | string, default: "" (no file is written))
@@ -33,9 +33,9 @@ function speedTable = cellSpeeds(compiledData, outputFolder, options)
 %           Cell - 1-based index
 %           AvgCellSpeed - mean speed
 %           CumulativeCellSpeed - speed sum
-%           varianceEntirePeriod - speed variance across all frames
-%           varianceFirstHalf - speed variance over the first half
-%           varianceLastHalf - speed variance over the second half
+%           VarianceEntirePeriod - speed variance across all frames
+%           VarianceFirstHalf - speed variance over the first half
+%           VarianceLastHalf - speed variance over the second half
 
     arguments
         compiledData (:,:) table
@@ -45,7 +45,7 @@ function speedTable = cellSpeeds(compiledData, outputFolder, options)
     end
 
     requiredCols = {'X', 'Y', 'Z', 'T'};
-    missingCols  = requiredCols(~ismember(requiredCols, compiledData.Properties.VariableNames));
+    missingCols = requiredCols(~ismember(requiredCols, compiledData.Properties.VariableNames));
     if ~isempty(missingCols)
         error('cellSpeeds:missingColumns', ...
               'compiledData is missing required column(s): %s', ...
@@ -120,9 +120,9 @@ function speedTable = cellSpeeds(compiledData, outputFolder, options)
             'Cell', ...
             'AvgCellSpeed', ...
             'CumulativeCellSpeed', ...
-            'varianceEntirePeriod', ...
-            'varianceFirstHalf', ...
-            'varianceLastHalf'} );
+            'VarianceEntirePeriod', ...
+            'VarianceFirstHalf', ...
+            'VarianceLastHalf'} );
 
     if outputFolder ~= ""
         if ~isfolder(outputFolder)

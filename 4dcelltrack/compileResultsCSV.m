@@ -1,5 +1,5 @@
-function compiledData = compileResultsFromCSV(inputFolder, outputFolder, options)
-% COMPILERESULTSFROMCSV Compile manual tracking results from multiple trackers
+function compiledData = compileResultsCSV(inputFolder, outputFolder, options)
+% COMPILERESULTSCSV Compile manual tracking results from multiple trackers
 % into a single table with physical unit conversions applied.
 %
 % Scans an input folder for subdirectories (one per tracker). Within
@@ -12,32 +12,23 @@ function compiledData = compileResultsFromCSV(inputFolder, outputFolder, options
 % Required:
 %   inputFolder: (char | string)
 %       Path to the folder that contains one subdirectory per tracker, 
-%       where the subdirectory contains a Results.csv file.
-%
-%       Expected structure:
-%           inputFolder/
-%               tracker1/Results.csv
-%               tracker2/Results.csv
-%               etc...
+%       where each subdirectory contains a Results.csv file.
 %
 % Optional:
 %   outputFolder: (char | string, default: "" (no file is written))
 %       Directory where the compiled results file will be saved.
-%       The folder is created automatically if it does not exist.
+%       Created automatically if it does not exist.
 %
 %   options
 %
-%       XYConversion: (double, default: 1)
-%           Multiplicative factor applied to the X and Y columns.
-%           Example: 0.65 converts 1 ImageJ pixel to 0.65 micrometers.
+%       XYScale: (double, default: 1)
+%           Scale factor applied to the X and Y columns.
 %
-%       ZConversion: (double, default: 1)
-%           Multiplicative factor applied to the Slice column to Z.
-%           Example: 20 converts 1 slice index to 20 micrometers.
+%       ZScale: (double, default: 1)
+%           Scale factor applied to the Slice column to get Z.
 %
-%       TConversion: (double, default: 1)
-%           Multiplicative factor applied to Time column.
-%           Example: 30 converts each frame number to 30 minutes.
+%       TScale: (double, default: 1)
+%           Scale factor applied to the Frame column to get Time (T).=
 %
 %       OutputFilename: (char | string, default: "CombinedResults.xlsx")
 %           Name of the output file.
@@ -58,24 +49,24 @@ function compiledData = compileResultsFromCSV(inputFolder, outputFolder, options
 %           X - X coordinate in converted units
 %           Y - Y coordinate in converted units
 %           Z - Z coordinate in converted units
-%           Time - Time in converted units
+%           T - Time in converted units
 %
-%   If outputFolder is provided, the table is also saved as a .txt 
-%   file unless extension is specified in OutputFilename.
+%   If outputFolder is provided, the table is also saved with name 
+%   specified in OutputFilename.
 
     arguments
         inputFolder (1,1) string
         outputFolder (1,1) string = ""
-        options.XYConversion (1,1) double = 1
-        options.ZConversion (1,1) double = 1
-        options.TConversion (1,1) double = 1
+        options.XYScale (1,1) double = 1
+        options.ZScale (1,1) double = 1
+        options.TScale (1,1) double = 1
         options.OutputFilename (1,1) string = "CombinedResults.xlsx"
         options.ResultsFilename (1,1) string = "Results.csv"
         options.Logs (1,1) logical = true
     end
 
     if ~isfolder(inputFolder)
-        error('compileResultsFromCSV:invalidInput', ...
+        error('compileResultsCSV:invalidInput', ...
               'inputFolder %s not found\n', inputFolder);
     end
 
@@ -87,7 +78,7 @@ function compiledData = compileResultsFromCSV(inputFolder, outputFolder, options
     trackerDirs = entries(isSubDir & ~isDot);
 
     if isempty(trackerDirs)
-        warning('compileResultsFromCSV:noSubdirs', ...
+        warning('compileResultsCSV:noSubdirs', ...
                 'No subdirectories found in inputFolder %s \n', inputFolder);
         compiledData = table();
         return
@@ -113,7 +104,7 @@ function compiledData = compileResultsFromCSV(inputFolder, outputFolder, options
         try
             rawData = readtable(resultsFile);
         catch ME
-            warning('compileResultsFromCSV:readError', ...
+            warning('compileResultsCSV:readError', ...
                     'Could not read file:\n  %s\nReason: %s', ...
                     resultsFile, ME.message);
             continue
@@ -122,7 +113,7 @@ function compiledData = compileResultsFromCSV(inputFolder, outputFolder, options
         requiredCols = {'X', 'Y', 'Slice', 'Frame'};
         missingCols = requiredCols(~ismember(requiredCols, rawData.Properties.VariableNames));
         if ~isempty(missingCols)
-            warning('compileResultsFromCSV:missingColumns', ...
+            warning('compileResultsCSV:missingColumns', ...
                     'Skipping "%s": missing column(s): %s', ...
                     trackerName, strjoin(missingCols, ', '));
             continue
@@ -143,11 +134,11 @@ function compiledData = compileResultsFromCSV(inputFolder, outputFolder, options
 
             compiledData.TrackerName(currentRow) = string(trackerName);
 
-            compiledData.X(currentRow) = row.X * options.XYConversion;
-            compiledData.Y(currentRow) = row.Y * options.XYConversion;
-            compiledData.Z(currentRow) = row.Slice * options.ZConversion;
+            compiledData.X(currentRow) = row.X * options.XYScale;
+            compiledData.Y(currentRow) = row.Y * options.XYScale;
+            compiledData.Z(currentRow) = row.Slice * options.ZScale;
 
-            compiledData.T(currentRow) = (row.Frame - 1) * options.TConversion;
+            compiledData.T(currentRow) = (row.Frame - 1) * options.TScale;
         end
 
         % Re-enable warnings
@@ -160,7 +151,7 @@ function compiledData = compileResultsFromCSV(inputFolder, outputFolder, options
     end
 
     if height(compiledData) == 0
-        warning('compileResultsFromCSV:noData', ...
+        warning('compileResultsCSV:noData', ...
                 'No data collected. Check your Results.csv files.');
         return
     end
