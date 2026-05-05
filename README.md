@@ -9,7 +9,7 @@ Tracking pipeline scripts are located here. For annotated cell tracking data, na
 <h4>Step 1 - Preprocess Raw Imaging Data</h4>
     <p>
         Begin with raw microscopy files (e.g., Nikon <code>.nd2</code>). Use 
-        <a href="#preProcessND2"><code>preProcessND2</code></a> to extract a specific series/channel combination, apply optional 
+        <code>preProcessND2</code> to extract a specific series/channel combination, apply optional 
         spatial binning, and perform Gaussian background subtraction. Save to a shared tracking folder.
     </p>
     <p>
@@ -42,7 +42,7 @@ Tracking pipeline scripts are located here. For annotated cell tracking data, na
 
 <h4>Step 3 - Collect Tracking Data</h4>
     <p>
-        When all cells have been tracked across all images, use <a href="#collectTrackingData"><code>collectTrackingData</code></a>
+        When all cells have been tracked across all images, use <code>collectTrackingData</code>
         to combine all tracking outputs into a single table. 
         This step and the following ones can be performed on our tracking coordinate data, located <a target="_blank" href="https://github.com/codyheadings/ACMT/tree/tracking-data">here</a>.
     </p>
@@ -58,7 +58,7 @@ Tracking pipeline scripts are located here. For annotated cell tracking data, na
 <h4>Step 4 - (Optional) Remove Duplicate Tracks</h4>
     <p>
         If multiple trackers labeled the same cells, you can use 
-        <a href="#filterDuplicateTracks"><code>filterDuplicateTracks</code></a> to remove redundant trajectories 
+        <code>filterDuplicateTracks</code> to remove redundant trajectories 
         based on detected spatial overlap. This is not essential and there are some cases
         where you may want to leave the data unfiltered.
     </p>
@@ -68,7 +68,7 @@ Tracking pipeline scripts are located here. For annotated cell tracking data, na
 
 <h4>Step 5 - Compute Cell Metrics</h4>
     <p>
-        Run <a href="#computeTrackingMetrics"><code>computeTrackingMetrics</code></a> to calculate per-cell movement 
+        Run <code>computeTrackingMetrics</code> to calculate per-cell movement 
         statistics, including:
     </p>
     <ul>
@@ -86,7 +86,7 @@ Tracking pipeline scripts are located here. For annotated cell tracking data, na
 
 <h4>Step 6 - Statistical Analysis</h4>
     <p>
-        Use <a href="#analyzeByGroup"><code>analyzeByGroup</code></a> to compare experimental groups and 
+        Use <code>analyzeByGroup</code> to compare experimental groups and 
         compute statistical significance (e.g., Shapiro-Wilk normality tests 
         and pairwise comparisons).
     </p>
@@ -99,7 +99,7 @@ Tracking pipeline scripts are located here. For annotated cell tracking data, na
 
 <h5>Mean Squared Displacement (MSD)</h5>
     <p>
-        Use <a href="#computeMSD"><code>computeMSD</code></a> to quantify diffusive behavior of cells.
+        Use <code>computeMSD</code> to quantify diffusive behavior of cells.
     </p>
     <p>
         <strong>Important:</strong> This function requires the 
@@ -112,7 +112,7 @@ Tracking pipeline scripts are located here. For annotated cell tracking data, na
 
 <h5>Turning Angles</h5>
     <p>
-        Use <a href="#computeTurningAngles"><code>computeTurningAngles</code></a> to measure directional changes 
+        Use <code>computeTurningAngles</code> to measure directional changes 
         between consecutive movement steps.
     </p>
 
@@ -122,7 +122,7 @@ Tracking pipeline scripts are located here. For annotated cell tracking data, na
 <h4>Step 8 - Visualization</h4>
     <p>
         Generate representative trajectory plots using 
-        <a href="#plotRepresentativeGraphs"><code>plotRepresentativeGraphs</code></a>. Tracks are selected based on 
+        <code>plotRepresentativeGraphs</code>. Tracks are selected based on 
         median path length for visualization consistency.
     </p>
 
