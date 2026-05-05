@@ -48,7 +48,7 @@ function aggregatedResults = computeTrackingMetrics(aggregatedTracks, outputFold
 %           AvgFrameDistance - from cellDistances
 %           CumulativeDistance - from cellDistances
 %           RelativeDisplacement - from cellDistances
-%           DirectionalPersistence - from cellDistances
+%           DirectionalityRatio - from cellDistances
 
     arguments
         aggregatedTracks (:,:) table
