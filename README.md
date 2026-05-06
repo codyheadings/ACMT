@@ -1,5 +1,5 @@
 # AssembloidCellMigrationTracker (ACMT)
-Open-source pipeline for 4D cell tracking and migration analysis in iPSC-derived assembloid live imaging.
+Publicly available pipeline for 4D cell tracking and migration analysis in iPSC-derived assembloid live imaging.
 
 Tracking pipeline scripts are located here. For annotated cell tracking data, navigate to the 'tracking-data' branch of this repository (or click this <a href="https://github.com/codyheadings/ACMT/tree/tracking-data">link</a>).
 
