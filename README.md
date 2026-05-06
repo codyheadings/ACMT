@@ -3,6 +3,8 @@ Publicly available pipeline for 4D cell tracking and migration analysis in iPSC-
 
 Tracking pipeline scripts are located here. For annotated cell tracking data, navigate to the 'tracking-data' branch of this repository (or click this <a href="https://github.com/codyheadings/ACMT/tree/tracking-data">link</a>).
 
+<strong>Associated publication:</strong> This pipeline is described in detail in M. P. Weidman et al. (2026), “A pipeline for cell migration analysis in live-cell imaging data from human iPSC-derived forebrain assembloids”, currently under review at the Journal of Cell Science
+
 <h3>Pipeline Operation</h3>
     <hr>
 
@@ -84,9 +86,9 @@ Tracking pipeline scripts are located here. For annotated cell tracking data, na
     Output files are generated per top-level group (e.g., per channel).
 </p>
 
-<h4>Step 6 - Statistical Analysis</h4>
+<h4>Step 6 - (Optional) Statistical Analysis</h4>
     <p>
-        Use <code>analyzeByGroup</code> to compare experimental groups and 
+        Although not used in our process, you can use <code>analyzeByGroup</code> to compare experimental groups and 
         compute statistical significance (e.g., Shapiro-Wilk normality tests 
         and pairwise comparisons).
     </p>
