@@ -1,9 +1,9 @@
 # AssembloidCellMigrationTracker (ACMT)
 Publicly available pipeline for 4D cell tracking and migration analysis in iPSC-derived assembloid live imaging.
 
-Tracking pipeline scripts are located here. For annotated cell tracking data, navigate to the 'tracking-data' branch of this repository (or click this <a href="https://github.com/codyheadings/ACMT/tree/tracking-data">link</a>).
+Tracking pipeline scripts are located here. For annotated cell tracking data, navigate to the 'tracking-data' branch of this repository (or click this <a href="https://github.com/codyheadings/ACMT/tree/tracking-data">link</a>). For access to raw imaging data, contact corresponding authors.
 
-<strong>Associated publication:</strong> This pipeline is described in detail in M. P. Weidman et al. (2026), “A pipeline for cell migration analysis in live-cell imaging data from human iPSC-derived forebrain assembloids”, currently under review for publication in Frontiers in Cell and Developmental Biology journal.
+<strong>Associated publication:</strong> This pipeline is described in detail in M. P. Weidman et al. (2026), “A pipeline for cell migration analysis in live-cell imaging data from human iPSC-derived forebrain assembloids”, accepted for publication with Frontiers in Cell and Developmental Biology journal, and is currently under production.
 
 <h3>Pipeline Operation</h3>
     <hr>
